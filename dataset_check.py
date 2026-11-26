@@ -1,49 +1,67 @@
-import os 
-
-train_img_count = len(os.listdir(path = "datasets/train/images"))
-test_img_count = len(os.listdir(path = "datasets/test/images"))
-val_img_count = len(os.listdir(path = "datasets/valid/images"))
-
-names = {'Chassis', 'back_cover', 'calculator', 'front_panel', 'motor', 'motor_cover', 'number_pad', 'objects', 'screw', 'screw_driver', 'vehicle_body', 'wheel'}
-
+import os
+import yaml 
 from pathlib import Path
 from collections import Counter
 
-train_counts = Counter(
-    int(line.split()[0]) for p in Path("datasets/train/labels").glob("*.txt") for line in p.read_text().splitlines() if line.strip()
-)
-
-train_parts_label_counts = {"Chassis" : train_counts[0], "back_cover" : train_counts[1], "calculator" : train_counts[2], "front_panel" : train_counts[3],
-                      "motor" : train_counts[4], "motor_cover" : train_counts[5], "number_pad" : train_counts[6], "objects" : train_counts[7],
-                      "screw" : train_counts[8], "screw_driver" : train_counts[9], "vehicle_body" : train_counts[10], "wheel" : train_counts[11]}
+cls_names = ['Chassis', 'back_cover', 'calculator', 'front_panel', 'motor', 'motor_cover', 'number_pad', 'objects', 'screw', 'screw_driver', 'vehicle_body', 'wheel']
 
 
+def img_count(image_path):
+    return len(os.listdir(path = image_path))
 
-test_counts = Counter(
-    int(line.split()[0]) for p in Path("datasets/test/labels").glob("*.txt") for line in p.read_text().splitlines() if line.strip()
-)
+#--------------------------------------------------------------------
 
-test_parts_label_counts = {"Chassis" : test_counts[0], "back_cover" : test_counts[1], "calculator" : test_counts[2], "front_panel" : test_counts[3],
-                      "motor" : test_counts[4], "motor_cover" : test_counts[5], "number_pad" : test_counts[6], "objects" : test_counts[7],
-                      "screw" : test_counts[8], "screw_driver" : test_counts[9], "vehicle_body" : test_counts[10], "wheel" : test_counts[11]}
+with open(file= "datasets/data.yaml", mode="r") as file:
+    config = yaml.safe_load(file)
+names = config["names"]
+def counts(label_path):
+    counting = Counter(
+        int(line.split()[0]) for p in Path(label_path).glob("*.txt") for line in p.read_text().splitlines() if line.strip()
+    )
+
+    label_counts = {
+        name : counting[i]
+        for i, name in enumerate(names)
+    }
+
+    return label_counts
 
 
-val_counts = Counter(
-    int(line.split()[0]) for p in Path("datasets/valid/labels").glob("*.txt") for line in p.read_text().splitlines() if line.strip()
-)
-
-
-val_parts_label_counts = {"Chassis" : val_counts[0], "back_cover" : val_counts[1], "calculator" : val_counts[2], "front_panel" : val_counts[3],
-                      "motor" : val_counts[4], "motor_cover" : val_counts[5], "number_pad" : val_counts[6], "objects" : val_counts[7],
-                      "screw" : val_counts[8], "screw_driver" : val_counts[9], "vehicle_body" : val_counts[10], "wheel" : val_counts[11]}
 
 print("Image Counts".center(100,"*"))
+train_img_count = img_count("datasets/train/images")
 print(f"\nTraining Image Counts: {train_img_count}")
+test_img_count = img_count("datasets/test/images")
 print(f"Tetsing Image Counts: {test_img_count}")
+val_img_count = img_count("datasets/valid/images")
 print(f"Validation Image Counts: {val_img_count}")
 print("\n\n")
 print("Labels Counts".center(100,"*"))
+train_parts_label_counts = counts("datasets/train/labels")
 print(f"\nTraining Label Counts: {train_parts_label_counts}")
+test_parts_label_counts = counts("datasets/test/labels")
 print(f"Testing Label Counts: {test_parts_label_counts}")
+val_parts_label_counts = counts("datasets/valid/labels")
 print(f"Validation Label Counts: {val_parts_label_counts}")
 
+print("\n")
+print("-".center(100,"-"))
+
+#----------------------------------------------------------------------------------------
+
+def image_label_checks(path_img, path_label):
+
+    images = Path(path_img)
+    labels = Path(path_label)
+
+    images_name = set(p.stem for p in images.glob("*.jpg"))
+    labels_name = set(p.stem for p in labels.glob("*.txt"))
+
+    return images_name.difference(labels_name)
+
+missing_train = image_label_checks("datasets/train/images", "datasets/train/labels")
+print("Training misses:",missing_train)
+missing_test = image_label_checks("datasets/test/images", "datasets/test/labels")
+print("Testing misses:",missing_test)
+missing_val= image_label_checks("datasets/valid/images", "datasets/valid/labels")
+print("Validation misses:",missing_val)
