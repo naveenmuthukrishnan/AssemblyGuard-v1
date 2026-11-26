@@ -1,0 +1,8 @@
+path : datasets
+train: train/images
+val: valid/images
+test: test/images
+
+nc: 12
+names: ['Chassis', 'back_cover', 'calculator', 'front_panel', 'motor', 'motor_cover', 'number_pad', 'objects', 'screw', 'screw_driver', 'vehicle_body', 'wheel']
+
